@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --secondary: #f5f7fa;
+    --text-main: #333;
+    --text-muted: #666;
+    --success: #388e3c;
+    --warning: #f57c00;
+    --danger: #d32f2f;
+    --border-color: #e0e0e0;
+}
+
+body {
+    @apply antialiased bg-gray-50 text-gray-900;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Custom button classes to maintain existing look while using Tailwind under the hood if possible, 
+   or just use Tailwind classes in components. The user wants to "use tailwind" so I'll prefer utility classes. */
