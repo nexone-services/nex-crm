@@ -10,3 +10,4 @@ dist/
 *.war
 **/node/
 node/
+apm-server-9.2.3-windows-x86_64

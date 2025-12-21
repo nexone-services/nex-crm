@@ -1,0 +1,16 @@
+services:
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:9.2.3
+    container_name: crm-filebeat
+    user: root
+    volumes:
+      - ./filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs:/usr/share/filebeat/logs:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - ELASTICSEARCH_HOSTS=http://host.docker.internal:9200
+      - KIBANA_HOST=http://host.docker.internal:5601
+    command: filebeat -e --strict.perms=false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
