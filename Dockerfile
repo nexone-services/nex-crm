@@ -1,16 +1,21 @@
 # =========================
 # Stage 1: Build
 # =========================
-FROM eclipse-temurin:21-jdk AS builder
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
 WORKDIR /build
 
 # Copy only pom.xml first (better layer caching)
 COPY pom.xml .
+COPY crm-ui/package.json crm-ui/
+COPY crm-ui/package-lock.json crm-ui/
+
+# Go offline (dependencies)
 RUN mvn -B -q dependency:go-offline
 
 # Copy source and build
 COPY src ./src
+COPY crm-ui ./crm-ui
 RUN mvn -B clean package -DskipTests
 
 # =========================
