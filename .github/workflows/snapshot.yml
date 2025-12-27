@@ -1,0 +1,32 @@
+name: Snapshot CI
+
+on:
+  push:
+    branches:
+      - "feature/**"
+
+jobs:
+  build-snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build SNAPSHOT JAR
+        run: mvn clean package -DskipTests
+
+      - name: Docker login
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Build & Push SNAPSHOT image
+        run: |
+          IMAGE_TAG=snapshot-${{ github.sha }}
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/crm-app:$IMAGE_TAG .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/crm-app:$IMAGE_TAG
