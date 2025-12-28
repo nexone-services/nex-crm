@@ -1,5 +1,5 @@
 image:
-  repository: nehal/crm-app  # ✅ MUST match Docker image name from GitHub Actions
+  repository: nehalchamatkar/crm-app  # ✅ MUST match Docker image name from GitHub Actions
   pullPolicy: IfNotPresent
   tag: "latest"  # Can be overridden by Harness with specific versions
 
