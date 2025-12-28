@@ -1,0 +1,26 @@
+image:
+  repository: nehal/crm-app  # ✅ MUST match Docker image name from GitHub Actions
+  pullPolicy: IfNotPresent
+  tag: "latest"  # Can be overridden by Harness with specific versions
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  hostname: crm-app.apps.YOUR-OPENSHIFT-CLUSTER.com  # ⚠️ REPLACE with your actual OpenShift route domain
+  path: /
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+env:
+  SPRING_PROFILES_ACTIVE: prod
