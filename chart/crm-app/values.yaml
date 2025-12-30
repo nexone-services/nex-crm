@@ -4,7 +4,7 @@ image:
   # REPLACE: Your Docker Hub username (from secrets.DOCKERHUB_USERNAME)
   repository: nehalchamatkar/crm-app
   # Tag will be overridden by Harness with artifact tag
-  tag: latest
+  tag: <+artifacts.primary.tag>
   pullPolicy: Always
 
 # Application name
