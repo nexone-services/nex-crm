@@ -37,13 +37,13 @@ resources:
     memory: 256Mi
 
 # REPLACE: Your Spring Boot environment variables
-env:
-  - name: SPRING_PROFILES_ACTIVE
-    value: "prod"
-  - name: SERVER_PORT
-    value: "8080"
-  - name: JAVA_OPTS
-    value: "-Xmx384m -Xms256m"
+#env:
+#  - name: SPRING_PROFILES_ACTIVE
+#    value: "prod"
+#  - name: SERVER_PORT
+#    value: "8080"
+#  - name: JAVA_OPTS
+#    value: "-Xmx384m -Xms256m"
 
 # Health checks for Spring Boot Actuator
 healthCheck:
@@ -64,12 +64,12 @@ healthCheck:
 # ConfigMap (optional)
 configMap:
   enabled: false
-  data: {}
+  data: { }
 
 # Secrets (optional)
 secrets:
   enabled: false
-  stringData: {}
+  stringData: { }
 
 # Autoscaling (disabled for trial)
 autoscaling:
