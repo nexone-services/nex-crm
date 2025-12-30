@@ -38,7 +38,7 @@ spec:
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
           env:
-        {{- toYaml .Values.env | nindent 8 }}
+            {{- toYaml .Values.env | nindent 12 }}
           livenessProbe:
             httpGet:
               path: {{ .Values.healthCheck.liveness.path }}
