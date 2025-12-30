@@ -1,63 +1,81 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-deployment
+  name: {{ .Values.app.name }}
   labels:
-    app: {{ .Release.Name }}
+    app: {{ .Values.app.name }}
+    app.kubernetes.io/name: {{ .Values.app.name }}
+    app.kubernetes.io/version: {{ .Values.image.tag | quote }}
+    harness.io/track: {{ .Values.harness.track }}
+  annotations:
+    harness.io/managed: "true"
 spec:
   replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      app: {{ .Values.app.name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app: {{ .Values.app.name }}
+        version: {{ .Values.image.tag | quote }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.service.port }}"
     spec:
-      {{- if .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
-      {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: {{ .Values.app.name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.containerPort }}
+              containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
-          {{- if .Values.livenessProbe.enabled }}
+          env:
+        {{- toYaml .Values.env | nindent 8 }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.livenessProbe.httpGet.path }}
-              port: {{ .Values.livenessProbe.httpGet.port }}
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
-          {{- end }}
-          {{- if .Values.readinessProbe.enabled }}
+              path: {{ .Values.healthCheck.liveness.path }}
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.healthCheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.liveness.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.readinessProbe.httpGet.path }}
-              port: {{ .Values.readinessProbe.httpGet.port }}
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
-          {{- end }}
+              path: {{ .Values.healthCheck.readiness.path }}
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.healthCheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.readiness.failureThreshold }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: {{ .Values.env.SPRING_PROFILES_ACTIVE | quote }}
-            {{- range $key, $value := .Values.env }}
-            {{- if ne $key "SPRING_PROFILES_ACTIVE" }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
-            {{- end }}
-          {{- if .Values.envFrom }}
-          envFrom:
-            {{- toYaml .Values.envFrom | nindent 12 }}
-          {{- end }}
+          {{- toYaml .Values.resources | nindent 10 }}
+        {{- if .Values.configMap.enabled }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+        {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+      {{- if .Values.configMap.enabled }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Values.app.name }}-config
+      {{- end }}
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

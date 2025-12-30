@@ -1,73 +1,83 @@
-# Docker image configuration
-image:
-  repository: nehalchamatkar/crm-app  # ✅ MUST match Docker image name from GitHub Actions
-  pullPolicy: IfNotPresent
-  tag: "latest"  # Can be overridden by Harness with specific versions (e.g., 1.0.0, snapshot-<sha>)
-
-# Image pull secrets (required for private DockerHub repositories)
-# Create secret in OpenShift: kubectl create secret docker-registry dockerhub-secret --docker-server=docker.io --docker-username=<username> --docker-password=<token>
-imagePullSecrets:
-  - name: dockerhub-secret
-
 replicaCount: 1
 
-# Container configuration
-containerPort: 8080
+image:
+  # REPLACE: Your Docker Hub username (from secrets.DOCKERHUB_USERNAME)
+  repository: nehalchamatkar/crm-app
+  # Tag will be overridden by Harness with artifact tag
+  tag: latest
+  pullPolicy: Always
 
-# Service configuration
+# Application name
+app:
+  name: crm-app
+
 service:
   type: ClusterIP
+  # REPLACE: Your Spring Boot application port (default 8080)
   port: 8080
   targetPort: 8080
 
 # OpenShift Route configuration
 route:
   enabled: true
-  # hostname: crm-app.apps.YOUR-OPENSHIFT-CLUSTER.com  # Optional: Uncomment and set for specific hostname
+  host: ""  # Leave empty for auto-generated OpenShift URL
+  path: /
   tls:
     enabled: true
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
 
-# Health probes (Spring Boot Actuator endpoints)
-livenessProbe:
-  enabled: true
-  httpGet:
-    path: /actuator/health/liveness
-    port: 8080
-  initialDelaySeconds: 60
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-readinessProbe:
-  enabled: true
-  httpGet:
-    path: /actuator/health/readiness
-    port: 8080
-  initialDelaySeconds: 30
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 3
-
-# Resource limits and requests
+# Resources for trial/production
 resources:
   limits:
     cpu: 500m
     memory: 512Mi
   requests:
-    cpu: 200m
+    cpu: 250m
     memory: 256Mi
 
-# Environment variables
+# REPLACE: Your Spring Boot environment variables
 env:
-  SPRING_PROFILES_ACTIVE: prod
-  # Add additional environment variables as needed
-  # JAVA_OPTS: "-XX:MaxRAMPercentage=75 -XX:+UseG1GC"
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod"
+  - name: SERVER_PORT
+    value: "8080"
+  - name: JAVA_OPTS
+    value: "-Xmx384m -Xms256m"
 
-# Additional environment variables from ConfigMap or Secret
-# envFrom: []
-#   - configMapRef:
-#       name: crm-config
-#   - secretRef:
-#       name: crm-secrets
+# Health checks for Spring Boot Actuator
+healthCheck:
+  liveness:
+    # REPLACE: Your actuator endpoint or use / if actuator not enabled
+    path: /actuator/health/liveness
+    initialDelaySeconds: 90
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 45
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# ConfigMap (optional)
+configMap:
+  enabled: false
+  data: {}
+
+# Secrets (optional)
+secrets:
+  enabled: false
+  stringData: {}
+
+# Autoscaling (disabled for trial)
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 75
+
+# Harness tracking labels
+harness:
+  track: stable

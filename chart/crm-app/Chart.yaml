@@ -1,6 +1,7 @@
+# Chart.yaml
 apiVersion: v2
 name: crm-app
-description: A Helm chart for deploying the CRM Backend to OpenShift
+description: CRM Spring Boot application for OpenShift with Harness
 type: application
-version: 0.1.0
+version: 1.0.0
 appVersion: "1.0.0"
